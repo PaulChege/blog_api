@@ -18,6 +18,9 @@
             <column name="password" type="varchar(255)">
                 <constraints nullable="false"/>
             </column>
+            <column name="status" type="boolean" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
             <column name="created_at" type="timestamp">
                 <constraints nullable="false"/>
             </column>

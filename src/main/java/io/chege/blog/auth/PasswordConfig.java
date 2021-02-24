@@ -1,4 +1,4 @@
-package io.chege.blog.security;
+package io.chege.blog.auth;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
