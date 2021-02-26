@@ -1,6 +1,10 @@
 package io.chege.blog.user;
 
+import io.chege.blog.post.Post;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -59,5 +63,21 @@ public class UserService {
         }else{
             throw new IllegalStateException("User not found");
         }
+     }
+
+    public void confirmUser(String userId) {
+        User currentUser = getCurrentUser();
+        if (!currentUser.getId().equals(userId) && currentUser.getType().equals("user")) {
+            throw new IllegalStateException("Invalid user");
+        }
+    }
+
+     public User getCurrentUser() {
+         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+         return userRepository.getUserByEmail(authentication.getName()).get();
+     }
+
+     public User findById(String id){
+        return userRepository.findById(id).get();
      }
 }

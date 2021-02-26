@@ -3,16 +3,15 @@ package io.chege.blog.user;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.chege.blog.auth.PasswordConfig;
+import io.chege.blog.post.Post;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicUpdate;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.beans.factory.annotation.Value;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.PrePersist;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -27,10 +26,15 @@ public class User {
     private String password;
     @Value("true")
     private Boolean status;
+    @Value("user")
+    private String type;
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+    @OneToMany(mappedBy = "user")
+    private Set<Post> posts;
 
     public User(String name, String email, String password, Boolean status) {
         this.name = name;
@@ -40,6 +44,12 @@ public class User {
     }
 
     public User() {
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        this.id = java.util.UUID.randomUUID().toString();
+        this.type = "user";
     }
 
     public String getId() {
@@ -87,9 +97,12 @@ public class User {
         this.status = status;
     }
 
-    @PrePersist
-    protected void onCreate() {
-        this.id = java.util.UUID.randomUUID().toString();
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
     }
 
     @Override
