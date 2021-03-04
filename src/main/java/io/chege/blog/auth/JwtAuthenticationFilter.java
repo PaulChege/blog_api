@@ -1,6 +1,7 @@
 package io.chege.blog.auth;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.chege.blog.SpringContext;
 import io.chege.blog.user.User;
 import io.chege.blog.user.UserRepository;
 import io.chege.blog.user.UserService;
@@ -37,9 +38,11 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
+
         try {
             UsernameAndPasswordAuthenticationRequest authenticationRequest =
                     new ObjectMapper().readValue(request.getInputStream(), UsernameAndPasswordAuthenticationRequest.class);
+
             Authentication authentication =
                     new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(),
                             authenticationRequest.getPassword());
@@ -51,6 +54,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
 
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
+
         String token = Jwts
                         .builder()
                         .setSubject(authResult.getName())

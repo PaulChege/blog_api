@@ -1,6 +1,9 @@
 package io.chege.blog.auth;
 
 import com.google.common.base.Strings;
+import io.chege.blog.SpringContext;
+import io.chege.blog.user.User;
+import io.chege.blog.user.UserRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
@@ -16,6 +19,7 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 public class JwtTokenVerifier extends OncePerRequestFilter {
 
@@ -39,8 +43,12 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
             String token = authorizationHeader.replace(jwtConfig.getTokenPrefix(), "");
             Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
             String username = claimsJws.getBody().getSubject();
-            Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, null);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            UserRepository repository = SpringContext.getBean(UserRepository.class);
+            Optional<User> user = repository.getUserByEmail(username);
+            if(user.isPresent() && user.get().getStatus()) {
+                Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, null);
+                SecurityContextHolder.getContext().setAuthentication(authentication);
+            }
         }catch(RuntimeException e){
             throw new IllegalStateException("Invalid token");
         }
