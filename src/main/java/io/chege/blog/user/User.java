@@ -2,7 +2,10 @@ package io.chege.blog.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.chege.blog.SpringContext;
 import io.chege.blog.auth.PasswordConfig;
+import io.chege.blog.authority.Authority;
+import io.chege.blog.authority.AuthorityRepository;
 import io.chege.blog.post.Post;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.DynamicUpdate;
@@ -11,6 +14,8 @@ import org.springframework.beans.factory.annotation.Value;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 @Entity
@@ -36,11 +41,16 @@ public class User {
     @OneToMany(mappedBy = "user")
     private Set<Post> posts;
 
-    public User(String name, String email, String password, Boolean status) {
+    @OneToMany(mappedBy = "user", cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
+    private Set<Authority> authorities;
+
+    public User(String name, String email, String password, Boolean status, String type) {
         this.name = name;
         this.email = email;
         this.password = new PasswordConfig().passwordEncoder().encode(password);
         this.status = status;
+        this.type = type;
+
     }
 
     public User() {
@@ -49,7 +59,22 @@ public class User {
     @PrePersist
     protected void onCreate() {
         this.id = java.util.UUID.randomUUID().toString();
-        this.type = "user";
+        if (this.type == null) {
+            this.type = "user";
+        }
+
+        switch (this.type){
+            case "user":
+                Authority aUser = new Authority("user", "ROLE_USER", true);
+                this.authorities = new HashSet<>(Arrays.asList(aUser));
+                aUser.setUser(this);
+                break;
+            case "admin":
+                Authority aAdmin = new Authority("admin", "ROLE_ADMIN", true);
+                this.authorities = new HashSet<>(Arrays.asList(aAdmin));
+                aAdmin.setUser(this);
+                break;
+        }
     }
 
     public String getId() {
@@ -114,5 +139,9 @@ public class User {
                 ", createdAt=" + createdAt +
                 ", updatedAt=" + updatedAt +
                 '}';
+    }
+
+    public Set<Authority> getAuthorities() {
+        return authorities;
     }
 }

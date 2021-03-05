@@ -1,10 +1,14 @@
 package io.chege.blog.user;
 
 import io.chege.blog.CustomError;
+import io.chege.blog.authority.AuthorityRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.query.Param;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,6 +25,7 @@ public class UserController {
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity getUsers(){
         List<User> users = userService.getUsers();
         return ResponseEntity.ok().body(users);
@@ -63,4 +68,5 @@ public class UserController {
             return new ResponseEntity(customError, customError.getStatus());
         }
     }
+
 }

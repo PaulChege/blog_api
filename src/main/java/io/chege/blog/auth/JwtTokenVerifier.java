@@ -10,6 +10,7 @@ import io.jsonwebtoken.Jwts;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -19,7 +20,11 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JwtTokenVerifier extends OncePerRequestFilter {
 
@@ -43,10 +48,13 @@ public class JwtTokenVerifier extends OncePerRequestFilter {
             String token = authorizationHeader.replace(jwtConfig.getTokenPrefix(), "");
             Jws<Claims> claimsJws = Jwts.parserBuilder().setSigningKey(secretKey).build().parseClaimsJws(token);
             String username = claimsJws.getBody().getSubject();
+            var authorities = (List<Map<String, String>>) claimsJws.getBody().get("authorities");
+            Set<SimpleGrantedAuthority> simpleGrantedAuthorities = authorities.stream().map(m -> new SimpleGrantedAuthority(m.get("authority"))).collect(Collectors.toSet());
+
             UserRepository repository = SpringContext.getBean(UserRepository.class);
             Optional<User> user = repository.getUserByEmail(username);
             if(user.isPresent() && user.get().getStatus()) {
-                Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, null);
+                Authentication authentication = new UsernamePasswordAuthenticationToken(username, null, simpleGrantedAuthorities);
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             }
         }catch(RuntimeException e){
